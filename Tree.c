@@ -1,11 +1,8 @@
-//#define LISTUTILS_H_
+
 #include "ListUtils.h"
+#include "TreeUtils.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-
-struct Tree;
-typedef struct Tree* TreeRef;
 
 
 
@@ -15,12 +12,7 @@ struct Tree{
 	void* value;
 	int Marked;
 };
-
-TreeRef newTree(void* headData);
-int isEmptyTree(TreeRef tree);
-TreeRef getParent(TreeRef child);
-void insertChild(TreeRef parent, void* data);
-void DFSPrint (TreeRef tree);
+typedef struct Tree* TreeRef;
 
 
 

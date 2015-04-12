@@ -1,5 +1,5 @@
 
-#include "ListUtils.h"
+//#include "ListUtils.h"
 #include "TreeUtils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@ struct Tree{
 typedef struct Tree* TreeRef;
 
 
-
+/*
 int main(){
 	//INITIALIZE FOR NON STATIC POINTER TYPES
 	int a=1,b=2,c=3,d=4,e=5,f=6,g=7;
@@ -29,7 +29,7 @@ int main(){
 
 	DFSPrint(temp);
 	return 0;
-}
+}*/
 
 TreeRef newTree(void* headData){
 	TreeRef new;
@@ -40,15 +40,31 @@ TreeRef newTree(void* headData){
 	new->Parent=NULL;
 	return new;
 }
+
+void* rootData(TreeRef tree){
+	//printf ("headData");
+	//printBoard((*Child)(list->value)->state);
+	return (isEmptyTree(tree))? NULL : tree->value;
+
+}
+
 TreeRef getParent(TreeRef child){
 	return (TreeRef) (child->Parent);
 }
+
+ListRef getChildren(TreeRef parent){
+    return (ListRef) (parent->Children);
+}
+
+
 void insertChild(TreeRef parent, void* data){
     TreeRef temp =newTree(data);
     temp->Parent=parent;
 	append((parent->Children), temp);
 
 }
+
+
 void DFSPrint (TreeRef tree){
 	if(isEmpty(tree->Children)){//tree.children==NULL
 		tree->Marked=1;

@@ -12,4 +12,5 @@ void* headData(ListRef list);
 ListRef tail(ListRef list);
 ListRef append(ListRef list, void* data);
 int isEmpty(ListRef list);
+void destroyList(ListRef list, FreeFunc freeData);
 #endif /* LISTUTILS_H_ */

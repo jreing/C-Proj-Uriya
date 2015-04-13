@@ -42,8 +42,6 @@ TreeRef newTree(void* headData){
 }
 
 void* rootData(TreeRef tree){
-	//printf ("headData");
-	//printBoard((*Child)(list->value)->state);
 	return (isEmptyTree(tree))? NULL : tree->value;
 
 }
@@ -56,6 +54,9 @@ ListRef getChildren(TreeRef parent){
     return (ListRef) (parent->Children);
 }
 
+int getMarked(TreeRef tree){
+        return tree->Marked;
+}
 
 void insertChild(TreeRef parent, void* data){
     TreeRef temp =newTree(data);
@@ -64,8 +65,8 @@ void insertChild(TreeRef parent, void* data){
 
 }
 
-
 void DFSPrint (TreeRef tree){
+
 	if(isEmpty(tree->Children)){//tree.children==NULL
 		tree->Marked=1;
 		printf("%d\n",*(int*)(tree->value));
@@ -73,6 +74,7 @@ void DFSPrint (TreeRef tree){
 	}
 
 	ListRef curChild=tree->Children;
+	//printf("the value of curChild is %d and the Marked is %d",curChild->value, getMarked(headData(curChild)));
 	while(curChild!=NULL){
 		if((((TreeRef)(headData(curChild)))->Marked)==0){
 			DFSPrint(headData(curChild));
@@ -82,6 +84,42 @@ void DFSPrint (TreeRef tree){
 	tree->Marked=1;
 	printf("%d\n",*(int*)(tree->value));
 }
+void unMarkTree(TreeRef tree){
+    if(isEmpty(getChildren(tree))){//tree.children==NULL
+		tree->Marked=0;
+		return;
+	}
+
+	ListRef curChild=getChildren(tree);
+	while(curChild!=NULL){
+        //printf("current Marked is %d",((TreeRef)(headData(curChild)))->Marked);
+		unMarkTree(headData(curChild));
+		curChild=tail(curChild);
+	}
+	tree->Marked=0;
+
+}
+void DFSTwo (TreeRef tree){
+
+	if(isEmpty(getChildren(tree))){//tree.children==NULL
+		tree->Marked=1;
+		printf("%d\n",*(void**)(rootData(tree)));
+		return;
+	}
+
+	ListRef curChild=getChildren(tree);
+	while(curChild!=NULL){
+        //printf("current Marked is %d",((TreeRef)(headData(curChild)))->Marked);
+		if((getMarked((TreeRef)(headData(curChild))))==0){
+			DFSTwo(headData(curChild));
+		}
+		curChild=tail(curChild);
+	}
+	tree->Marked=1;
+	printf("%d\n",*(void**)(rootData(tree)));
+}
+
+
 int isEmptyTree(TreeRef tree){
 	if (tree==NULL)
 		return 1;
@@ -91,7 +129,6 @@ int isEmptyTree(TreeRef tree){
 		return 0;
 	}
 }
-
 
 /*void destroyList(ListRef list, FreeFunc freeData){
 	ListRef curNext;

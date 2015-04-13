@@ -23,6 +23,11 @@ ListRef newList(void* headData){
 void* headData(ListRef list){
 	//printf ("headData");
 	//printBoard((*Child)(list->value)->state);
+	//printf("list value is %d", list->value);
+	//the value printed here is
+	//int* p = list->value;
+	//int** q = *p;
+	printf("the current value is %d\n", list->value);
 	return (isEmpty(list))? NULL : list->value;
 
 }
@@ -49,7 +54,7 @@ ListRef append(ListRef list, void* data){
 	}
 	return tail(list);
 }
-/*
+
 void destroyList(ListRef list, FreeFunc freeData){
 	ListRef curNext;
 	int cnt=0;
@@ -63,7 +68,7 @@ void destroyList(ListRef list, FreeFunc freeData){
 	if (cnt==0) printf ("cnt: %d", cnt);
 	free(list);
 }
-*/
+
 int isEmpty(ListRef list){
 	if (list==NULL)
 		return 1;

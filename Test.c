@@ -31,8 +31,8 @@ int main(){
 
 
 	//INITIALIZE FOR NON STATIC POINTER TYPES
-
-    WidgetRef a=newWidget(1,1,500,500,1,"hello","HiThere");
+    ///TEST 1
+    /*WidgetRef a=newWidget(1,1,500,500,1,"hello","HiThere");
     TreeRef temp= newTree((void*)a);
     printf("x equals= %d\n",((WidgetRef)rootData(temp))->x);
     printf("y equals= %d\n",((WidgetRef)rootData(temp))->y);
@@ -46,17 +46,23 @@ int main(){
 
     //printf("x of child is %d ", ((WidgetRef)(headData(getChildren(temp))))->x);
     DFSTwo(temp);
-
+    */
 
     ///TESTTTT 2- DFS, DFS2 working, using void** instead of int*
     /*
 	int a=1,b=2,c=3,d=4,e=5,f=6,g=7;
+
+	//lets make a fun int print func
+	void printInt (void* data){
+        printf("I hope this fucking works %d\n", (int)data);
+	}
 	TreeRef temp = newTree((void*)&a);
 	insertChild(temp, &b);
 	insertChild(temp, &c);
 	insertChild(temp, &d);
 	TreeRef Two=(TreeRef)(headData(getChildren(temp)));
-	//*(int*)(tree->value)
+	//
+	*(int*)(tree->value)
 	void** p= (rootData(Two));
 	printf("this is the fucking right value thou %d\n", *p);
 	printf("this is TWO %d\n", *(int*)(rootData(Two)));// works- no one knows why
@@ -70,14 +76,12 @@ int main(){
 	printf("this is the fucking right value thou- THREE %d\n", *q);
 	printf("this is THREE %d\n", *(int*)(rootData(Three)));// works- no one knows why
 
-
-
-	/*insertChild(Two, &f);
-	insertChild((TreeRef)(headData(tail(tail(getChildren(temp))))), &g);
-
-
     printf("DFS begins here\n\n");
-	DFSTwo(temp);*/
+
+	DFSTwo(temp,printInt);
+    */
+	//insertChild(Two, &f);
+	//insertChild((TreeRef)(headData(tail(tail(getChildren(temp))))), &g);
 
     ///TEST 3//now working- must remember to use unMark!!
     /*int a=1,b=2;
@@ -104,6 +108,41 @@ int main(){
 	insertChild((TreeRef)(headData(tail(tail(getChildren(temp))))), &g);
 
 	DFSPrint(temp);*/
+	///TEST 5
+
+	//lets make a fun int print func
+	void printInt (void* data){
+        printf("Int Printing %d\n", *(int*)data);
+	}
+
+	void printWidget(void* data){
+	    WidgetRef temp=(WidgetRef) data;
+        printf("x=%d,  y=%d,  width=%d,  height=%d, filename equals= %s\n",temp->x,temp->y,temp->width, temp->height, temp->img_filename);
+        //printf("isSelected equals= %d\n",((WidgetRef)rootData(temp))->isSelected);
+        //printf("filename equals= %p\n",((WidgetRef)rootData(temp))->img_filename);
+	}
+	int a=1,b=2,c=3,d=4,e=5,f=6,g=7;
+	TreeRef temp = newTree((void*)&a);
+	insertChild(temp, &b);
+	insertChild(temp, &c);
+	insertChild(temp, &d);
+	TreeRef Two=(TreeRef)(headData(getChildren(temp)));
+	//printf("this is TWO %d\n", rootData(Two));
+	insertChild(Two, &e);
+	insertChild(Two, &f);
+	insertChild((TreeRef)(headData(tail(tail(getChildren(temp))))), &g);
+
+
+    printf("DFS begins here\n\n");
+
+	DFSPrint(temp,printInt);
+
+    ///IF WE WANTED TO USE TEMP AGAIN, WE WOULD CALL unMark
+	WidgetRef a2=newWidget(1,1,500,500,1,"hello","HiThere");
+    TreeRef temp2= newTree((void*)a2);
+    WidgetRef b2=newWidget(2,2,502,502,2,"hello2","HiThere2");
+    insertChild(temp2, b2);
+    DFSPrint(temp2,printWidget);
 	return 0;
 }
 

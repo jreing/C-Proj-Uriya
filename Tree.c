@@ -65,24 +65,26 @@ void insertChild(TreeRef parent, void* data){
 
 }
 
-void DFSPrint (TreeRef tree){
+void DFSPrint (TreeRef tree, printFunc print){
 
-	if(isEmpty(tree->Children)){//tree.children==NULL
+
+	if(isEmpty(getChildren(tree))){//tree.children==NULL
 		tree->Marked=1;
-		printf("%d\n",*(int*)(tree->value));
+		//printf("%d\n",*(void**)(rootData(tree)));
+		print((void**)(rootData(tree)));///SENDS ACTUAL OBJECT, NOT A REFERENCE!!
 		return;
 	}
 
-	ListRef curChild=tree->Children;
-	//printf("the value of curChild is %d and the Marked is %d",curChild->value, getMarked(headData(curChild)));
+	ListRef curChild=getChildren(tree);
 	while(curChild!=NULL){
-		if((((TreeRef)(headData(curChild)))->Marked)==0){
-			DFSPrint(headData(curChild));
+        //printf("current Marked is %d",((TreeRef)(headData(curChild)))->Marked);
+		if((getMarked((TreeRef)(headData(curChild))))==0){
+			DFSPrint(headData(curChild),print);
 		}
 		curChild=tail(curChild);
 	}
 	tree->Marked=1;
-	printf("%d\n",*(int*)(tree->value));
+	print((void**)(rootData(tree)));
 }
 void unMarkTree(TreeRef tree){
     if(isEmpty(getChildren(tree))){//tree.children==NULL
@@ -99,11 +101,12 @@ void unMarkTree(TreeRef tree){
 	tree->Marked=0;
 
 }
-void DFSTwo (TreeRef tree){
+void DFSTwo (TreeRef tree, printFunc print){
 
 	if(isEmpty(getChildren(tree))){//tree.children==NULL
 		tree->Marked=1;
-		printf("%d\n",*(void**)(rootData(tree)));
+		//printf("%d\n",*(void**)(rootData(tree)));
+		print(*(void**)(rootData(tree)));///SENDS ACTUAL OBJECT, NOT A REFERENCE!!
 		return;
 	}
 
@@ -111,12 +114,12 @@ void DFSTwo (TreeRef tree){
 	while(curChild!=NULL){
         //printf("current Marked is %d",((TreeRef)(headData(curChild)))->Marked);
 		if((getMarked((TreeRef)(headData(curChild))))==0){
-			DFSTwo(headData(curChild));
+			DFSTwo(headData(curChild),print);
 		}
 		curChild=tail(curChild);
 	}
 	tree->Marked=1;
-	printf("%d\n",*(void**)(rootData(tree)));
+	print(*(void**)(rootData(tree)));
 }
 
 

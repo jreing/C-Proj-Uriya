@@ -27,7 +27,7 @@ void* headData(ListRef list){
 	//the value printed here is
 	//int* p = list->value;
 	//int** q = *p;
-	printf("the current value is %d\n", list->value);
+	//printf("the current value is %d\n", list->value);
 	return (isEmpty(list))? NULL : list->value;
 
 }

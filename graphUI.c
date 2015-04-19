@@ -1,5 +1,5 @@
-//need to free widget
-// need to free gameoptions!
+//$$$need to free widget
+//$$$need to free gameoptions!
 
 #include <stdio.h>
 #include "SDL/SDL.h"
@@ -8,15 +8,29 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "TreeUtils.h"
+#include "logic.h"
 
 #define WIN_W 1000
 #define WIN_H 1000
 #define IMG_W 240
 #define IMG_H 296
 
+#define CELL_HEIGHT 78
+#define CELL_WIDTH 88
+
 #define BUTTON_WIDTH 268
 #define BUTTON_HEIGHT 74
-#define SELECTED 813
+
+#define GRID_WIDTH 830
+#define GRID_HEIGHT 663
+#define BOARD_BUTTON_WIDTH 160
+#define BOARD_BUTTON_HEIGHT 48
+#define STATUS_BAR_BUTTON_WIDTH 482
+#define STATUS_BAR_BUTTON_HEIGHT 79
+#define TOP_PANEL_HEIGHT 115
+#define SIDE_PANEL_WIDTH 207
+
+#define SELECTED BUTTON_WIDTH*2+5
 
 #define NEW_GAME 1
 #define LOAD_GAME 2
@@ -26,6 +40,11 @@
 #define HUMAN 6
 #define MACHINE 7
 #define BACK 8
+#define LEVEL_UP 9
+#define LEVEL_DOWN 10
+#define DONE 11
+#define MOVE 12
+
 
 #define NEW_GAME_LOCATION 200 ... 200+BUTTON_HEIGHT
 #define LOAD_GAME_LOCATION 10*1+200+1*BUTTON_HEIGHT ...10*1+200+2*BUTTON_HEIGHT
@@ -35,6 +54,17 @@
 #define HUMAN_LOCATION NEW_GAME_LOCATION
 #define MACHINE_LOCATION LOAD_GAME_LOCATION
 #define U_SELECT_BACK_LOCATION CREATE_GAME_LOCATION
+#define SKILL_LOCATION NEW_GAME_LOCATION
+#define S_SELECT_BACK_LOCATION LOAD_GAME_LOCATION
+#define DONE_LOCATION CREATE_GAME_LOCATION
+#define UP_ARROW 200 ... 237
+#define DOWN_ARROW 239 ... 280
+
+#define WindowInitMacro	 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {\
+								printf("ERROR: unable to init SDL: %s\n", SDL_GetError());\
+								return 1;\
+							} \
+							atexit(SDL_Quit);
 
 struct Widget {
 	int srcX, srcY, width, height;
@@ -54,6 +84,8 @@ struct gameOptions {
 typedef struct Widget Widget;
 typedef struct gameOptions gameOptions;
 typedef Widget* WidgetRef;
+
+WidgetRef mouse, cat; //Widgets for quick board updating
 
 gameOptions* newGame();
 int humanSelect(int isCat);
@@ -83,64 +115,6 @@ void printWidget(void* data) {
 			temp->isSelected, temp->img_filename);
 	//printf("isSelected equals= %d\n",((WidgetRef)rootData(temp))->isSelected);
 	//printf("filename equals= %p\n",((WidgetRef)rootData(temp))->img_filename);
-}
-//opens a window with the widget image in it
-SDL_Surface* displayWindow(Widget* widget) {
-	SDL_Rect imgrect = { widget->x, widget->y, widget->width, widget->height };
-	SDL_Rect rect = { 0, 0, 1400, 1400 };
-
-	// Create window surface
-	SDL_WM_SetCaption(widget->caption, widget->caption);
-	SDL_Surface * display = SDL_SetVideoMode(widget->width, widget->height, 0,
-	SDL_HWSURFACE | SDL_DOUBLEBUF);
-	if (display == NULL) {
-		printf("ERROR: failed to set video mode: %s\n", SDL_GetError());
-		exit(0);
-	}
-
-	//puts(widget->img_filename);
-	if (widget->img_filename == NULL) {
-		puts("bg");
-		if (SDL_FillRect(display, &rect,
-				SDL_MapRGB(display->format, 255, 255, 255)) != 0) {
-			printf("ERROR: failed to draw rect: %s\n", SDL_GetError());
-			exit(0);
-		} else {
-			if (SDL_Flip(display) != 0) {
-				printf("ERROR: failed to flip buffer: %s\n", SDL_GetError());
-				return NULL;
-			}
-			return display;
-		}
-	} else {
-
-		SDL_Surface *img = SDL_LoadBMP(widget->img_filename);
-
-		if (img == NULL) {
-			printf("ERROR: failed to load image: %s\n", SDL_GetError());
-			if (SDL_FillRect(display, &imgrect,
-					SDL_MapRGB(display->format, 0, 0, 0)) != 0) {
-				printf("ERROR: failed to draw rect: %s\n", SDL_GetError());
-				exit(0);
-			}
-		} else {
-
-			// Apply the image to the display
-			if (SDL_BlitSurface(img, &imgrect, display, &imgrect) != 0) {
-				SDL_FreeSurface(img);
-				printf("ERROR: failed to blit image: %s\n", SDL_GetError());
-				return 0;
-			}
-		}
-	}
-	if (SDL_Flip(display) != 0) {
-		printf("ERROR: failed to flip buffer: %s\n", SDL_GetError());
-		return 0;
-	}
-
-	SDL_Delay(1000);
-
-	return display;
 }
 
 int displayWidget(void* data) {
@@ -198,20 +172,17 @@ Widget* createWidget(int x, int y, int srcX, int srcY, int width, int height,
 
 int openMainWindow() {
 	int i, action = 0;
-// Initialize SDL and make sure it quits
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		return 1;
-	}
-	atexit(SDL_Quit);
-	// Initialize SDL and make sure it quits
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		return 1;
-	}
-	atexit(SDL_Quit);
-	display = SDL_SetVideoMode(500, 700, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 
+	// Initialize SDL and make sure it quits
+	/*if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	 printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
+	 return 1;
+	 }
+	 atexit(SDL_Quit);
+	 display = SDL_SetVideoMode(500, 700, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	 */
+	WindowInitMacro;
+	display = SDL_SetVideoMode(500, 700, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	TreeRef t = newTree(createWidget(0, 0, 0, 0, 600, 7000, 0, NULL, "hgh"));
 	i = 0;
 	insertChild(t,
@@ -255,11 +226,12 @@ int openMainWindow() {
 						}
 						i++;
 						cur = getChildWidget(t, i);
-					} //emd while
+					} //emd while*/
 					break;
 				case SDLK_TAB:
 					printf("tab\n");
 					i = 1;
+
 					cur = getChildWidget(t, i);
 					while (cur != NULL) {
 						printWidget(cur);
@@ -355,169 +327,218 @@ WidgetRef newWidget(int x, int y, int width, int height, int isSelected,
 }
 
 int main() {
-
-	TreeRef t1 = newTree(createWidget(1, 2, 3, 4, 5, 6, 1, "a", "b"));
-	insertChild(t1, createWidget(7, 8, 9, 10, 11, 12, 0, "c", "d"));
-	insertChild(t1, newWidget(5, 5, 5, 5, 0, "f", "f"));
-	TreeRef Two = (TreeRef) (headData(getChildren(t1)));
-// void**  p=rootData(Two);
-//printf("x of child is %d ", (getChild(t1,1))->x);
-//printWidget((WidgetRef)(getChild(t1,1)));
-//DFSPrint(t1,printWidget());
-//DFSTwo (t1, printWidget);
-
-	openMainWindow();
-
+	//skillSelect(1);
+	/*TreeRef t1 = newTree(createWidget(1, 2, 3, 4, 5, 6, 1, "a", "b"));
+	 insertChild(t1, createWidget(7, 8, 9, 10, 11, 12, 0, "c", "d"));
+	 insertChild(t1, newWidget(5, 5, 5, 5, 0, "f", "f"));
+	 TreeRef Two = (TreeRef) (headData(getChildren(t1)));
+	 // void**  p=rootData(Two);
+	 //printf("x of child is %d ", (getChild(t1,1))->x);
+	 //printWidget((WidgetRef)(getChild(t1,1)));
+	 //DFSPrint(t1,printWidget());
+	 //DFSTwo (t1, printWidget);
+	 */
+	//openMainWindow();
+	gameOptions game = { 0, 7, 1, 0 };
+	openGameWindow(game);
 	return 1;
 }
-/*
- int main23() {
- putenv("SDL_VIDEO_WINDOW_POS=center");
- putenv("SDL_VIDEO_CENTERED=1");
- int quit = 0;
- openMainWindow();
 
- // Poll for keyboard & mouse events
- SDL_Event e;
- while (!quit) {
- while (SDL_PollEvent(&e) != 0) {
- switch (e.type) {
- case (SDL_QUIT):
- quit = 1;
- break;
- case (SDL_KEYUP):
- if (e.key.keysym.sym == SDLK_ESCAPE)
- quit = 1;
- break;
- case (SDL_MOUSEBUTTONUP):
+TreeRef boardToTree(char** board) {
+	TreeRef temp = newTree(
+			createWidget(SIDE_PANEL_WIDTH, TOP_PANEL_HEIGHT, SIDE_PANEL_WIDTH,
+			TOP_PANEL_HEIGHT, GRID_WIDTH, GRID_HEIGHT, 0, "Board.bmp", "hgh"));
+	int i, j;
+	for (i = 0; i < 7; i++) {
+		for (j = 0; j < 7; j++) {
+			switch (board[j][i]) {
+			case 'M':
+				mouse = createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
+				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1627, 0,
+				CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", "");
+				insertChild(temp, mouse);
 
- if ((e.button.x > 80) && (e.button.x < 340))
- switch (e.button.y) {
- case NEW_GAME_LOCATION:
- SDL_Quit();
- puts("new game");
- newGame();
- openMainWindow();
- break;
- case LOAD_GAME_LOCATION:
- puts("load game");
- break;
- case CREATE_GAME_LOCATION:
- puts("create game");
- break;
- case EDIT_GAME_LOCATION:
- puts("edit game");
- break;
- case QUIT_LOCATION:
- quit = 3;
- break;
-
- }
- break;
- }
- }
- }
-
- SDL_Quit();
- return 0;
- }
- */
-int main2(int argc, char* args[]) {
-///Start SDL
-	SDL_Init(SDL_INIT_EVERYTHING);
-
-// Initialize SDL and make sure it quits
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		return 1;
-	}
-	atexit(SDL_Quit);
-
-// Create window surface
-	SDL_WM_SetCaption("Cat and Mouse", "Cat and Mouse");
-	SDL_Surface *w = SDL_SetVideoMode(WIN_W, WIN_H, 0,
-	SDL_HWSURFACE | SDL_DOUBLEBUF);
-	if (w == NULL) {
-		printf("ERROR: failed to set video mode: %s\n", SDL_GetError());
-		return 1;
-	}
-
-// Define the rects we need
-	SDL_Rect rect = { 10, 10, 50, 50 };
-	SDL_Rect imgrect = { 0, 0, IMG_W, IMG_H };
-
-// Load test spritesheet image
-	SDL_Surface *img = SDL_LoadBMP("main_menu.bmp");
-	if (img == NULL) {
-		printf("ERROR: failed to load image: %s\n", SDL_GetError());
-		return 1;
-	}
-
-	int quit = 0;
-	while (!quit) {
-		// Clear window to BLACK
-		if (SDL_FillRect(w, 0, 0) != 0) {
-			printf("ERROR: failed to draw rect: %s\n", SDL_GetError());
-			break;
-		}
-
-		// Green rectangle button
-		if (SDL_FillRect(w, &rect, SDL_MapRGB(w->format, 0, 255, 0)) != 0) {
-			printf("ERROR: failed to draw rect: %s\n", SDL_GetError());
-			break;
-		}
-
-		// Draw image sprite
-		if (SDL_BlitSurface(img, &imgrect, w, 0) != 0) {
-			SDL_FreeSurface(img);
-			printf("ERROR: failed to blit image: %s\n", SDL_GetError());
-			break;
-		}
-
-		/*// Advance to next sprite
-		 imgrect.x += imgrect.w;
-		 if (imgrect.x >= img->w) {
-		 imgrect.x = 0;
-		 imgrect.y += imgrect.h;
-		 if (imgrect.y >= img->h) imgrect.y = 0;
-		 }
-		 */
-		// We finished drawing
-		if (SDL_Flip(w) != 0) {
-			printf("ERROR: failed to flip buffer: %s\n", SDL_GetError());
-			break;
-		}
-
-		// Poll for keyboard & mouse events
-		SDL_Event e;
-		while (SDL_PollEvent(&e) != 0) {
-			switch (e.type) {
-			case (SDL_QUIT):
-				quit = 1;
 				break;
-			case (SDL_KEYUP):
-				if (e.key.keysym.sym == SDLK_ESCAPE)
-					quit = 1;
+			case 'P':
+				insertChild(temp,
+						createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
+						TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1365, 0,
+						CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
 				break;
-			case (SDL_MOUSEBUTTONUP):
-				if ((e.button.x > rect.x) && (e.button.x < rect.x + rect.w)
-						&& (e.button.y > rect.y)
-						&& (e.button.y < rect.y + rect.h))
-					quit = 1;
+			case 'W':
+				insertChild(temp,
+						createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
+						TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1452, 0,
+						CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
 				break;
-			default:
+			case 'C':
+				cat = createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
+				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1540, 0,
+				CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", "");
+				insertChild(temp, cat);
 				break;
 			}
 		}
-
 	}
+	printBoard(board);
+	//nonRecDFS(temp, displayWidget);
+	return temp;
+}
 
-	SDL_FreeSurface(img);
+void updateGrid(int direction) {
+	WidgetRef temp = NULL;
+	int imgLoc;
 
-//Quit SDL
+	if (!strcmp(turn, "mouse")) {
+		temp = mouse;
+		imgLoc=1627;
+	} else {
+		temp = cat;
+		imgLoc=1540;
+	}
+	temp->srcY = TOP_PANEL_HEIGHT;
+	temp->srcX = SIDE_PANEL_WIDTH;
+	displayWidget(temp);
+
+	temp->srcX = imgLoc;
+	temp->srcY = 0;
+	switch (direction) {
+	case UP:
+		temp->y -= CELL_HEIGHT;
+		break;
+	case DOWN:
+		temp->y += CELL_HEIGHT;
+		break;
+	case LEFT:
+		temp->x -= CELL_WIDTH;
+		break;
+	case RIGHT:
+		temp->x += CELL_WIDTH;
+		break;
+	}
+	displayWidget(temp);
+}
+
+int openGameWindow(gameOptions game) {
+	int i = 1, action = 0, direction=0;
+
+	//loading default game world #1
+	char** board = loadGame(1);
+	//$$$ Check including it inside
+	updateGameStatus(board);
+
+	//parsing gameOption...
+	//TODO
+	///
+
+	WindowInitMacro;
+	display = SDL_SetVideoMode(826, 662, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	TreeRef sidePanel = newTree(
+			createWidget(0, 0, 0, 0, GRID_WIDTH, GRID_HEIGHT, 0, "Board.bmp",
+					"hgh"));
+	for (i = 0; i < 5; i++) {
+		insertChild(sidePanel,
+				createWidget(20, 130 + BOARD_BUTTON_HEIGHT * i + 50 * i, 0,
+						i * BOARD_BUTTON_HEIGHT,
+						BOARD_BUTTON_WIDTH, BOARD_BUTTON_HEIGHT, 0,
+						"Buttons2.bmp", ""));
+	}
+	TreeRef topPanel = newTree(createWidget(300, 20, 325, 0,
+	STATUS_BAR_BUTTON_WIDTH, STATUS_BAR_BUTTON_HEIGHT, 0, "Buttons2.bmp", ""));
+	//insertChild(t2, createWidget(206, 114, 1365, 0, 90, 78, 0, "Board.bmp", "hgh"));
+	/*TreeRef t2 = newTree(
+	 createWidget(0, 0, 0, 0, GRID_WIDTH, GRID_HEIGHT, 0, "Board.bmp",
+	 "hgh"));*/
+
+	nonRecDFS(sidePanel, printWidget);
+	nonRecDFS(sidePanel, displayWidget);
+	nonRecDFS(topPanel, displayWidget);
+	nonRecDFS(boardToTree(board), displayWidget);
+
+	SDL_Event e;
+	WidgetRef cur;
+	while (action != QUIT) {
+		while (SDL_PollEvent(&e) != 0) {
+			//printf("poll");
+			switch (e.type) {
+			case (SDL_QUIT):
+				action = QUIT;
+				break;
+			case (SDL_KEYUP):
+				switch (e.key.keysym.sym) {
+
+				case SDLK_DOWN:
+					action = MOVE;
+					direction=DOWN;
+					break;
+				case SDLK_UP:
+					action = MOVE;
+					direction=UP;
+					break;
+				case SDLK_LEFT:
+					action = MOVE;
+					direction=LEFT;
+					break;
+				case SDLK_RIGHT:
+					action = MOVE;
+					direction=RIGHT;
+					break;
+				case SDLK_ESCAPE:
+					action = QUIT;
+					break;
+				default:
+					break;
+				} //end switch-keyup
+				break; //break keyup
+				/*
+				 case (SDL_MOUSEBUTTONUP):
+
+				 if ((e.button.x > 100) && (e.button.x < 100 + BUTTON_WIDTH)) {
+				 switch (e.button.y) {
+				 default:
+				 break;
+				 } //end mouse-y button
+				 }  //end mouse-x button
+				 break;*/
+			} //end switch e-type
+
+		} //end pollevent
+		switch (action) {
+		case QUIT:
+			puts("quit");
+			SDL_Quit();
+			freeBoard(board);
+
+			exit(0);
+			break;
+		case MOVE:
+			if (move(&board, direction)){
+				updateGrid(direction);
+				switchTurn();
+			}
+			direction=0;
+			break;
+		default:
+			break;
+		}
+		//displayWidget(cur);
+		action = 0;
+		switch (updateGameStatus(board)){
+		case 1:
+			printf ("mouse wins");
+			exit(0);
+			break;
+		case 2:
+			printf ("cat wins");
+			exit(0);
+			break;
+
+		}
+	} //while action
+	  //SDL_Delay(5000);
 	SDL_Quit();
 
-	return 0;
+	return 1;
 }
 
 gameOptions* newGame() {
@@ -539,47 +560,184 @@ gameOptions* newGame() {
 	} else
 		game->mouse_skill = 0;
 
+	printf("game: cat human=%d, cat_skill=%d, mouse_human=%d, mouse_skill=%d",
+			game->cat_human, game->cat_skill, game->mouse_human,
+			game->mouse_skill);
 	return game;
 }
 
 int skillSelect(int isCat) {
-	int i = 1;
+	int i = 1, action = 0;
+	int skill = 5;
 	puts("skill select");
-
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		return -1;
-	}
-	display = SDL_SetVideoMode(500, 600, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
-
-	int selection = 1;
-	TreeRef t2 = newTree(createWidget(0, 0, 0, 0, 600, 600, 0, NULL, "hgh"));
+	WindowInitMacro;
+	display = SDL_SetVideoMode(500, 500, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+//TreeRef caption = newTree(createWidget(100,0,));
+	TreeRef t2 = newTree(createWidget(0, 0, 0, 0, 600, 800, 0, NULL, "hgh"));
 	insertChild(t2, createWidget(100, 0 * 10 + 200 + 0 * BUTTON_HEIGHT,
-	BUTTON_WIDTH, 0,
-	BUTTON_WIDTH, BUTTON_HEIGHT, 1, "Buttons(1).bmp", ""));
+	BUTTON_WIDTH, BUTTON_HEIGHT * 4,
+	BUTTON_WIDTH, BUTTON_HEIGHT, 1, "Buttons.bmp", ""));
 	for (i = 7; i < 9; i++) {
 		Widget* b = createWidget(100,
 				(i - 6) * 10 + 200 + (i - 6) * BUTTON_HEIGHT, 0,
 				i * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, 0,
-				"Buttons(1).bmp", "");
+				"Buttons.bmp", "");
 		insertChild(t2, b);
 	}
 	nonRecDFS(t2, printWidget);
 	nonRecDFS(t2, displayWidget);
-	SDL_Delay(2000);
+
+	SDL_Event e;
+	WidgetRef cur;
+	while (action != QUIT) {
+		while (SDL_PollEvent(&e) != 0) {
+			switch (e.type) {
+			case (SDL_QUIT):
+				action = QUIT;
+				break;
+			case (SDL_KEYUP):
+				switch (e.key.keysym.sym) {
+				case SDLK_RETURN:
+					puts("enter");
+					i = 1;
+					cur = getChildWidget(t2, i);
+					while (cur != NULL) {
+						if (cur->isSelected == 1) {
+							switch (i) {
+							case 1:
+
+								break;
+							case 2:
+								action = BACK;
+								break;
+							case 3:
+								action = DONE;
+								break;
+							}
+
+							printf("%d", action);
+							break;
+						}
+						i++;
+						cur = getChildWidget(t2, i);
+					} //end while
+
+					break;
+				case SDLK_DOWN:
+					action = LEVEL_DOWN;
+					break;
+				case SDLK_UP:
+					action = LEVEL_UP;
+					break;
+				case SDLK_ESCAPE:
+					action = QUIT;
+					break;
+				case SDLK_TAB:
+					printf("tab\n");
+					i = 1;
+					cur = getChildWidget(t2, i);
+					while (cur != NULL) {
+						printWidget(cur);
+						if (cur->isSelected == 1) {
+							puts("1");
+							cur->isSelected = 0;
+							displayWidget(cur);
+							i++;
+							cur = getChildWidget(t2, i);
+							if (cur == NULL) {
+								//if list is over, start from beginning
+								i = 1;
+								cur = getChildWidget(t2, i);
+								puts("over");
+							}
+							cur->isSelected = 1;
+							displayWidget(cur);
+							break;
+						}
+						i++;
+						cur = getChildWidget(t2, i);
+					}
+					break;
+				default:
+					break;
+				}
+				break;
+			case (SDL_MOUSEBUTTONUP):
+
+				if ((e.button.x > 100) && (e.button.x < 100 + BUTTON_WIDTH)) {
+					switch (e.button.y) {
+					case S_SELECT_BACK_LOCATION:
+						action = BACK;
+						break;
+					case DONE_LOCATION:
+
+						action = DONE;
+						break;
+					case UP_ARROW:
+						puts("up");
+						if (e.button.x > 100 + BUTTON_WIDTH - 32) {
+							action = LEVEL_UP;
+						}
+						break;
+					case DOWN_ARROW:
+						puts("down");
+						if (e.button.x > 100 + BUTTON_WIDTH - 32) {
+							action = LEVEL_DOWN;
+						}
+						break;
+					} //end mouse-y button
+				}  //end mouse-x button
+				break;
+			}
+
+		} //end pollevenet
+		switch (action) {
+		case LEVEL_UP:
+			puts("level_up");
+			cur = getChildWidget(t2, 1);
+			cur->srcY += BUTTON_HEIGHT;
+			skill++;
+			if (skill == 10) {
+				cur->srcY = 0;
+				skill = 1;
+			}
+			displayWidget(cur);
+			action = 0;
+			break;
+		case LEVEL_DOWN:
+			cur = getChildWidget(t2, 1);
+			cur->srcY -= BUTTON_HEIGHT;
+			skill--;
+			if (skill == 0) {
+				cur->srcY = BUTTON_HEIGHT * 8;
+				skill = 9;
+			}
+			displayWidget(cur);
+			action = 0;
+			break;
+
+		case BACK:
+			SDL_Quit();
+			puts("back");
+			return -1;
+			break;
+		case DONE:
+			SDL_Quit();
+			puts("quit");
+			return skill;
+		}
+	}
+
+//SDL_Delay(2000);
 	SDL_Quit();
 	return -1;
 }
 
 int humanSelect(int isCat) {
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		return 1;
-	}
 	int i, action = 0;
-	display = SDL_SetVideoMode(500, 600, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
-
-	TreeRef t2 = newTree(createWidget(0, 0, 0, 0, 600, 600, 0, NULL, "hgh"));
+	WindowInitMacro;
+	display = SDL_SetVideoMode(500, 500, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	TreeRef t2 = newTree(createWidget(0, 0, 0, 0, 600, 800, 0, NULL, "hgh"));
 	insertChild(t2,
 			createWidget(100, 0 * 10 + 200 + 0 * BUTTON_HEIGHT, 0,
 					5 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, 1,
@@ -593,7 +751,6 @@ int humanSelect(int isCat) {
 	}
 	nonRecDFS(t2, displayWidget);
 
-	int quit = 0;
 	SDL_Event e;
 	WidgetRef cur;
 	while (action != QUIT) {
@@ -611,7 +768,7 @@ int humanSelect(int isCat) {
 					while (cur != NULL) {
 						if (cur->isSelected == 1) {
 							printWidget(cur);
-							action = i+5;
+							action = i + 5;
 							printf("%d", action);
 							break;
 						}
@@ -626,7 +783,7 @@ int humanSelect(int isCat) {
 				case SDLK_TAB:
 					printf("tab\n");
 					i = 1;
-					 cur = getChildWidget(t2, i);
+					cur = getChildWidget(t2, i);
 					while (cur != NULL) {
 						printWidget(cur);
 
@@ -677,6 +834,7 @@ int humanSelect(int isCat) {
 
 		} //end pollevenet
 		switch (action) {
+
 		case HUMAN:
 			SDL_Quit();
 			puts("human");
@@ -696,6 +854,5 @@ int humanSelect(int isCat) {
 		}
 	}
 	SDL_Quit();
-	return 0;
+	return -1;
 }
-

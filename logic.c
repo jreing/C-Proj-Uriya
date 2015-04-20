@@ -72,28 +72,32 @@ int move(char*** board, int direction) {
 //returns 1 if move was valid and made, 0 on fail;
 	if (!strcmp(turn, "cat")) {
 		if (direction == LEFT && catCol > 0
-				&& (*board)[catRow][catCol - 1] != 'W') {
+				&& (*board)[catRow][catCol - 1] != 'W'
+						&& (*board)[catRow][catCol - 1] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catCol--;
 			(*board)[catRow][catCol] = 'C';
 			return 1;
 		}
 		if (direction == RIGHT && catCol < 6
-				&& (*board)[catRow][catCol + 1] != 'W') {
+				&& (*board)[catRow][catCol + 1] != 'W'
+						&& (*board)[catRow][catCol + 1] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catCol++;
 			(*board)[catRow][catCol] = 'C';
 			return 1;
 		}
 		if (direction == DOWN && catRow < 6
-				&& (*board)[catRow + 1][catCol] != 'W') {
+				&& (*board)[catRow + 1][catCol] != 'W'
+						&& (*board)[catRow + 1][catCol] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catRow++;
 			(*board)[catRow][catCol] = 'C';
 			return 1;
 		}
 		if (direction == UP && catRow > 0
-				&& (*board)[catRow - 1][catCol] != 'W') {
+				&& (*board)[catRow - 1][catCol] != 'W'
+						&& (*board)[catRow - 1][catCol] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catRow--;
 			(*board)[catRow][catCol] = 'C';

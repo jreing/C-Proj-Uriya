@@ -18,7 +18,7 @@ int consoleMode() {
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 	gameOptions game = { 1, 1, 0, 0 };
-
+	int validMove=1;
 	char temp[7];
 	char** board; //7*7 board
 	board = loadGame(3);
@@ -36,20 +36,20 @@ int consoleMode() {
 		}
 		switch (temp[0]) {
 		case 'L':
-			move(&board, LEFT);
+			validMove=move(&board, LEFT);
 			break;
 		case 'R':
-			move(&board, RIGHT);
+			validMove=move(&board, RIGHT);
 			break;
 		case 'U':
-			move(&board, UP);
+			validMove=move(&board, UP);
 			break;
 		case 'D':
-			move(&board, DOWN);
+			validMove=move(&board, DOWN);
 			break;
 		} //end switch
 
-		switchTurn();
+		if (validMove) switchTurn();
 	}
 	switch (updateGameStatus(board)) {
 

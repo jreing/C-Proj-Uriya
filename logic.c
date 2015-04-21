@@ -8,15 +8,16 @@ int mouseRow, mouseCol, catRow, catCol, cheeseX, cheeseY;
 void switchTurn() {
 	if (!strcmp(turn, "cat")) {
 		sprintf(turn, "mouse");
+		turnCounter++;
 	} else
 		sprintf(turn, "cat");
 
 }
 
-int main(int argc, char* args[]) {
+int consoleMode() {
 
 	setvbuf(stdout, NULL, _IONBF, 0);
-	gameOptions game = { 1, 0, 1, 0 };
+	gameOptions game = { 1, 1, 0, 0 };
 
 	char temp[7];
 	char** board; //7*7 board
@@ -51,20 +52,22 @@ int main(int argc, char* args[]) {
 		switchTurn();
 	}
 	switch (updateGameStatus(board)) {
-	case 0:
-		printf("Game over. tie.\n");
-		break;
+
 	case 1:
 		printf("Game over. Mouse wins.\n");
 		break;
 	case 2:
 		printf("Game over. Cat wins. \n");
 		break;
+	case 3:
+		printf("Game over. tie.\n");
+		break;
 	}
 	printBoard(board);
 //saveGame(board, 3);
 
 	freeBoard(board);
+	exit(0);
 	return 0;
 }
 
@@ -176,6 +179,8 @@ int updateGameStatus(char** board) {
 		return 1;
 	if ((abs(catRow - mouseRow) + abs(catCol - mouseCol)) < 2)
 		return 2;
+	if (turnCounter == max_turns)
+		return 3;
 	else
 		return 0;
 }

@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "logic.h"
-
-int max_turns = 20; //max num of turns.
 
 int mouseRow, mouseCol, catRow, catCol, cheeseX, cheeseY;
 
@@ -16,11 +13,11 @@ void switchTurn() {
 
 }
 
-int main45(int argc, char* args[]) {
+int main(int argc, char* args[]) {
 
 	setvbuf(stdout, NULL, _IONBF, 0);
+	gameOptions game = { 1, 0, 1, 0 };
 
-	//int endgame=0; //flag for game ending
 	char temp[7];
 	char** board; //7*7 board
 	board = loadGame(3);
@@ -28,8 +25,14 @@ int main45(int argc, char* args[]) {
 	printf("cat %d %d", catRow, catCol);
 	while (!updateGameStatus(board)) {
 		printBoard(board);
-		printf("%s's turn- type a move please (U/D/L/R): \n", turn);
-		scanf("%s", temp);
+		if ((game.cat_human && !strcmp(turn, "cat"))
+				|| (game.mouse_human && !strcmp(turn, "mouse"))) {
+			printf("%s's turn- type a move please (U/D/L/R): \n", turn);
+			scanf("%s", temp);
+		} //end human move
+		else { //machine move
+			   //TODO - implement machine move - the result should be put into temp[0] as a character implying direction - L/R/D/U
+		}
 		switch (temp[0]) {
 		case 'L':
 			move(&board, LEFT);
@@ -43,11 +46,8 @@ int main45(int argc, char* args[]) {
 		case 'D':
 			move(&board, DOWN);
 			break;
-		}
-		/*if (!strcmp(turn,"cat")) {
-		 sprintf(turn,"mouse");
-		 }
-		 else sprintf(turn,"cat");*/
+		} //end switch
+
 		switchTurn();
 	}
 	switch (updateGameStatus(board)) {
@@ -62,7 +62,7 @@ int main45(int argc, char* args[]) {
 		break;
 	}
 	printBoard(board);
-	//saveGame(board, 3);
+//saveGame(board, 3);
 
 	freeBoard(board);
 	return 0;
@@ -73,7 +73,7 @@ int move(char*** board, int direction) {
 	if (!strcmp(turn, "cat")) {
 		if (direction == LEFT && catCol > 0
 				&& (*board)[catRow][catCol - 1] != 'W'
-						&& (*board)[catRow][catCol - 1] != 'P') {
+				&& (*board)[catRow][catCol - 1] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catCol--;
 			(*board)[catRow][catCol] = 'C';
@@ -81,7 +81,7 @@ int move(char*** board, int direction) {
 		}
 		if (direction == RIGHT && catCol < 6
 				&& (*board)[catRow][catCol + 1] != 'W'
-						&& (*board)[catRow][catCol + 1] != 'P') {
+				&& (*board)[catRow][catCol + 1] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catCol++;
 			(*board)[catRow][catCol] = 'C';
@@ -89,15 +89,14 @@ int move(char*** board, int direction) {
 		}
 		if (direction == DOWN && catRow < 6
 				&& (*board)[catRow + 1][catCol] != 'W'
-						&& (*board)[catRow + 1][catCol] != 'P') {
+				&& (*board)[catRow + 1][catCol] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catRow++;
 			(*board)[catRow][catCol] = 'C';
 			return 1;
 		}
-		if (direction == UP && catRow > 0
-				&& (*board)[catRow - 1][catCol] != 'W'
-						&& (*board)[catRow - 1][catCol] != 'P') {
+		if (direction == UP && catRow > 0 && (*board)[catRow - 1][catCol] != 'W'
+				&& (*board)[catRow - 1][catCol] != 'P') {
 			(*board)[catRow][catCol] = '#';
 			catRow--;
 			(*board)[catRow][catCol] = 'C';
@@ -149,8 +148,8 @@ void freeBoard(char** board) {
 }
 
 int updateGameStatus(char** board) {
-	//scan board for locations of mouse,cat,cheese
-	//update variables accordingly and return 1 if mouse wins, 2 if cat wins
+//scan board for locations of mouse,cat,cheese
+//update variables accordingly and return 1 if mouse wins, 2 if cat wins
 	int i = 0, j = 0;
 
 	char temp;
@@ -196,13 +195,13 @@ void printBoard(char** board) {
 		}
 		printf("\n");
 	}
-	//printf ("end printboard");
+//printf ("end printboard");
 }
 
 char** loadGame(int gamenum) {
-	//loads the game in "world_gamenum.txt"
+//loads the game in "world_gamenum.txt"
 	char temp = '0' + gamenum;
-	//printf ("%c", temp);
+//printf ("%c", temp);
 	int i = 0;
 	char filename[20] = "world_#.txt";
 	filename[6] = temp;
@@ -213,7 +212,7 @@ char** loadGame(int gamenum) {
 		board[i] = calloc(7, sizeof(char));
 	}
 
-	//puts (filename);
+//puts (filename);
 
 	FILE * map = fopen(filename, "r");
 	if (map == NULL) {
@@ -226,7 +225,7 @@ char** loadGame(int gamenum) {
 		fscanf(map, "%s\n", board[i]);
 	}
 
-	//printBoard(board);
+//printBoard(board);
 	fclose(map);
 
 	return board;
@@ -266,7 +265,7 @@ int saveGame(char** board, int gamenum) {
 	if (gamenum > 5 || gamenum < 0)
 		exit(0);
 
-	//printf("%s", board[6]);
+//printf("%s", board[6]);
 	int i = 0;
 	char temp = '0' + gamenum;
 	char filename[20] = "world_#.txt";

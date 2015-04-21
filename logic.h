@@ -24,6 +24,7 @@ char** loadGame (int gamenum);
 
 char turn[7];//toggle cat's turn.
 int max_turns ; //max num of turns.
+int turnCounter;
 
 struct gameOptions {
 	int cat_human;

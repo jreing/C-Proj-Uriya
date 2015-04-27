@@ -15,54 +15,16 @@
 #define IMG_W 240
 #define IMG_H 296
 
-#define CELL_HEIGHT 78
-#define CELL_WIDTH 88
-
+//menu defines
 #define BUTTON_WIDTH 268
 #define BUTTON_HEIGHT 74
-
-#define GRID_WIDTH 830
-#define GRID_HEIGHT 663
-#define BOARD_BUTTON_WIDTH 160
-#define BOARD_BUTTON_HEIGHT 48
-//#define STATUS_BAR_BUTTON_WIDTH 482
-//#define STATUS_BAR_BUTTON_HEIGHT 79
-#define TOP_PANEL_HEIGHT 115
-#define SIDE_PANEL_WIDTH 207
-
 #define SELECTED BUTTON_WIDTH*2+5
 #define SELECTED_WORLD -BUTTON_WIDTH-5
-
-#define MOUSE 0
-#define CAT 1
-#define MID_GAME 10
-
-#define NEW_GAME 1
-#define LOAD_GAME 2
-#define CREATE_GAME 3
-#define EDIT_GAME 4
-#define QUIT 5
-#define HUMAN 6
-#define MACHINE 7
-#define BACK 8
-#define LEVEL_UP 9
-#define LEVEL_DOWN 10
-#define DONE 11
-#define MOVE 12
-#define PAUSE 13
-#define UNPAUSE 14
-#define SAVE_GAME 15
-#define RESTART_GAME 16
-#define RECONF_CAT 17
-#define RECONF_MOUSE 18
-
 #define NEW_GAME_LOCATION 200 ... 200+BUTTON_HEIGHT
 #define LOAD_GAME_LOCATION 10*1+200+1*BUTTON_HEIGHT ...10*1+200+2*BUTTON_HEIGHT
 #define CREATE_GAME_LOCATION 10*2+200+2*BUTTON_HEIGHT ... 10*2+200+3*BUTTON_HEIGHT
 #define EDIT_GAME_LOCATION 10*3+200+3*BUTTON_HEIGHT ... 10*3+200+4*BUTTON_HEIGHT
 #define QUIT_LOCATION 10*4+200+4*BUTTON_HEIGHT ... 10*4+200+5*BUTTON_HEIGHT
-#define PAUSE_LOCATION_Y 10 + 3 * (10 + STATUS_CAPTION_HEIGHT)
-#define PAUSE_LOCATION_X 300
 #define HUMAN_LOCATION NEW_GAME_LOCATION
 #define MACHINE_LOCATION LOAD_GAME_LOCATION
 #define U_SELECT_BACK_LOCATION CREATE_GAME_LOCATION
@@ -77,15 +39,36 @@
 #define SKILL_MOUSE_CAPTION_LOCATION_Y 3*CAPTION_HEIGHT-2
 #define SELECT_MOUSE_CAPTION_LOCATION_Y 6*CAPTION_HEIGHT-10
 #define SELECT_CAT_CAPTION_LOCATION_Y 5*CAPTION_HEIGHT-5
+
+//game and editor window defines
+
+#define GRID_WIDTH 830
+#define GRID_HEIGHT 663
+#define BOARD_BUTTON_WIDTH 160
+#define BOARD_BUTTON_HEIGHT 48
+#define TOP_PANEL_HEIGHT 115
+#define SIDE_PANEL_WIDTH 207
+#define CELL_HEIGHT 78
+#define CELL_WIDTH 88
+#define PAUSE_LOCATION_Y 10 + 3 * (10 + STATUS_CAPTION_HEIGHT)
+#define PAUSE_LOCATION_X 300
 #define RECONF_MOUSE_LOCATION 130 ... 130 + BOARD_BUTTON_HEIGHT
 #define RECONF_CAT_LOCATION 130 + BOARD_BUTTON_HEIGHT + 50 ... 130 + 2*BOARD_BUTTON_HEIGHT + 50
 #define RESTART_GAME_LOCATION 130 + 2*BOARD_BUTTON_HEIGHT + 100 ... 130 + 3*BOARD_BUTTON_HEIGHT + 100
 #define GOTO_MAIN_MENU_LOCATION 130 + 3*BOARD_BUTTON_HEIGHT + 150 ... 130 + 4*BOARD_BUTTON_HEIGHT + 150
 #define QUIT_PROG_LOCATION 130 + 4*BOARD_BUTTON_HEIGHT + 200 ... 130 + 5*BOARD_BUTTON_HEIGHT + 200
+#define PLACE_MOUSE_LOCATION RECONF_MOUSE_LOCATION
+#define PLACE_CAT_LOCATION RECONF_CAT_LOCATION
+#define PLACE_CHEESE_LOCATION RESTART_GAME_LOCATION
+#define PLACE_WALL_LOCATION GOTO_MAIN_MENU_LOCATION
+#define PLACE_EMPTY_LOCATION QUIT_PROG_LOCATION
 #define CAPTION_HEIGHT 30
 #define CAPTION_WIDTH 480
-#define MOUSE_LOCATION 1627
-#define CAT_LOCATION 1540
+#define MOUSE_LOCATION 1629
+#define CAT_LOCATION 1541
+#define CHEESE_LOCATION 1368
+#define WALL_LOCATION 1455
+#define PINK_DELTA 85
 #define STATUS_CAPTIONS_X 1082
 #define SPACE_BUTTON_HEIGHT 34
 #define SPACE_BUTTON_WIDTH 245
@@ -108,6 +91,37 @@
 #define PINK_CELL_X 1467
 #define PINK_CELL_Y 91
 
+//player definitions
+#define MOUSE 0
+#define CAT 1
+#define MID_GAME 10
+
+//actions definitions
+#define NEW_GAME 1
+#define LOAD_GAME 2
+#define CREATE_GAME 3
+#define EDIT_GAME 4
+#define QUIT 5
+#define HUMAN 6
+#define MACHINE 7
+#define BACK 8
+#define LEVEL_UP 9
+#define LEVEL_DOWN 10
+#define DONE 11
+#define MOVE 12
+#define PAUSE 13
+#define UNPAUSE 14
+#define SAVE_GAME 15
+#define RESTART_GAME 16
+#define RECONF_CAT 17
+#define RECONF_MOUSE 18
+#define PLACE_CAT 19
+#define PLACE_MOUSE 20
+#define PLACE_CHEESE 21
+#define PLACE_WALL 22
+#define PLACE_EMPTY 23
+
+//macro defines
 #define WindowInitMacro	 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {\
 								printf("ERROR: unable to init SDL: %s\n", SDL_GetError());\
 								return 1;\
@@ -135,7 +149,7 @@ typedef Widget* WidgetRef;
 
 gameOptions game;
 
-WidgetRef mouse, cat; //Widgets for quick board updating
+WidgetRef mouse, cat, pink; //Widgets for quick board updating
 
 int humanSelect(int player);
 int openGameWindow(int gameNum);
@@ -226,7 +240,7 @@ Widget* createWidget(int x, int y, int srcX, int srcY, int width, int height,
 }
 
 int openMainWindow() {
-	int i, action = 0, gameNum = 1, game = { -1, -1, -1, -1 };
+	int i, action = 0, gameNum = 1;
 
 	// Initialize SDL and make sure it quits
 	/*if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -405,10 +419,10 @@ WidgetRef newWidget(int x, int y, int width, int height, int isSelected,
 }
 
 int main() {
-	openEditorWindow(1);
+	openGameWindow(1);
 }
 
-int main23(int argc, char* args[]) {
+int main6(int argc, char* args[]) {
 
 	if (argc > 1) {
 		if (!strcmp(args[1], "-console")) {
@@ -448,7 +462,7 @@ TreeRef boardToTree(char** board) {
 			switch (board[j][i]) {
 			case 'M':
 				mouse = createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
-				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1627, 0,
+				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, MOUSE_LOCATION, 0,
 				CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", "");
 				insertChild(temp, mouse);
 
@@ -456,18 +470,20 @@ TreeRef boardToTree(char** board) {
 			case 'P':
 				insertChild(temp,
 						createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
-						TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1365, 0,
-						CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
+						TOP_PANEL_HEIGHT + j * CELL_HEIGHT - 2, CHEESE_LOCATION,
+								0,
+								CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
 				break;
 			case 'W':
 				insertChild(temp,
 						createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
-						TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1452, 0,
-						CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
+						TOP_PANEL_HEIGHT + j * CELL_HEIGHT - 2, WALL_LOCATION,
+								0,
+								CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", ""));
 				break;
 			case 'C':
 				cat = createWidget(SIDE_PANEL_WIDTH + i * CELL_WIDTH,
-				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, 1540, 0,
+				TOP_PANEL_HEIGHT + j * CELL_HEIGHT, CAT_LOCATION, 0,
 				CELL_WIDTH, CELL_HEIGHT, 0, "Board.bmp", "");
 				insertChild(temp, cat);
 				break;
@@ -480,22 +496,39 @@ TreeRef boardToTree(char** board) {
 }
 
 void updateGrid(int direction) {
-	WidgetRef temp = NULL;
+	puts("update");
+	WidgetRef temp;
 	int imgLoc;
 
 	if (!strcmp(turn, "mouse")) {
 		temp = mouse;
 		imgLoc = MOUSE_LOCATION;
-	} else {
+	} else if (!strcmp(turn, "cat")) {
 		temp = cat;
 		imgLoc = CAT_LOCATION;
+	} else {
+		puts("pink");
+		printWidget(pink);
+		temp = pink;
+		imgLoc = PINK_CELL_X;
 	}
+
 	temp->srcY = TOP_PANEL_HEIGHT;
 	temp->srcX = SIDE_PANEL_WIDTH;
 	displayWidget(temp);
 
-	temp->srcX = imgLoc;
-	temp->srcY = 0;
+	switch (imgLoc) {
+	case MOUSE_LOCATION:
+	case CAT_LOCATION:
+		temp->srcX = imgLoc;
+		temp->srcY = 0;
+		break;
+	case PINK_CELL_X:
+		temp->srcX = imgLoc;
+		temp->srcY = PINK_CELL_Y;
+		break;
+	}
+
 	switch (direction) {
 	case UP:
 		temp->y -= CELL_HEIGHT;
@@ -742,20 +775,20 @@ int openGameWindow(int gameNum) {
 				} else if (pause
 						&& e.button.x > 20&& e.button.x<20+BOARD_BUTTON_WIDTH) {
 					switch (e.button.y) {
-					case RECONF_MOUSE_LOCATION:
-						action = RECONF_MOUSE;
+					case PLACE_MOUSE_LOCATION:
+						action = PLACE_MOUSE;
 						break;
-					case RECONF_CAT_LOCATION:
-						action = RECONF_CAT;
+					case PLACE_CAT_LOCATION:
+						action = PLACE_CAT;
 						break;
-					case RESTART_GAME_LOCATION:
-						action = RESTART_GAME;
+					case PLACE_CHEESE_LOCATION:
+						action = PLACE_CHEESE;
 						break;
-					case GOTO_MAIN_MENU_LOCATION:
-						action = BACK;
+					case PLACE_WALL_LOCATION:
+						action = PLACE_WALL;
 						break;
-					case QUIT_PROG_LOCATION:
-						action = QUIT;
+					case PLACE_EMPTY_LOCATION:
+						action = PLACE_EMPTY;
 						break;
 					} //end switch
 				}
@@ -1503,6 +1536,7 @@ int humanSelect(int player) {
 }
 
 int openEditorWindow(int gameNum) {
+
 	int i = 1, action = -1, direction = 0, selectedCellX = 0, selectedCellY = 0;
 
 	if (game.cat_human == -1 || game.mouse_human == -1) {
@@ -1510,6 +1544,7 @@ int openEditorWindow(int gameNum) {
 	}
 	//loading default game world #1
 	char** board = loadGame(gameNum);
+	sprintf(turn, "editor");
 	//$$$ Check including it inside
 	updateGameStatus(board);
 
@@ -1567,22 +1602,28 @@ int openEditorWindow(int gameNum) {
 	//SDL_Delay(5000);
 
 	SDL_Event e;
-	WidgetRef cur;
+
 	SDL_Rect curPos;
+	curPos.x = TOP_PANEL_HEIGHT;
+	curPos.y = SIDE_PANEL_WIDTH;
 	curPos.w = CELL_WIDTH;
 	curPos.h = CELL_HEIGHT;
 
+	pink = createWidget(SIDE_PANEL_WIDTH, TOP_PANEL_HEIGHT, PINK_CELL_X,
+	PINK_CELL_Y,
+	CELL_WIDTH + 2, CELL_HEIGHT + 2, 0, "Board2.bmp", "");
+	displayWidget(pink);
 	while (action != QUIT) {
 
 		if (action != 0) {
 			puts("refreshing");
-
 			//curPos.x = cur->x;
 			//curPos.y = cur->y;
 			//insertChild(topPanel, createWidget(300, 20, STATUS_CAPTIONS_X, 0,
 			//SPACE_BUTTON_WIDTH, SPACE_BUTTON_HEIGHT, 0, "Buttons.bmp", ""));
 
 			nonRecDFS(topPanel, displayWidget);
+			//displayWidget(pink);
 			action = 0;
 		}
 
@@ -1693,6 +1734,7 @@ int openEditorWindow(int gameNum) {
 
 		} //end pollevent
 		switch (action) {
+
 		case QUIT:
 			puts("quit");
 			SDL_Quit();
@@ -1704,11 +1746,18 @@ int openEditorWindow(int gameNum) {
 			return 1;
 			break;
 		case MOVE:
-
-			action = 0;
-			direction = 0;
+			if ((pink->x == SIDE_PANEL_WIDTH && direction == LEFT)
+					|| (pink->x == SIDE_PANEL_WIDTH + 6 * CELL_WIDTH
+							&& direction == RIGHT)
+					|| (pink->y == TOP_PANEL_HEIGHT && direction == UP)
+					|| (pink->y == TOP_PANEL_HEIGHT + 6 * CELL_HEIGHT
+							&& direction == DOWN)) {
+				break;
+			} else {
+				updateGrid(direction);
+				direction = 0;
+			}
 			break;
-
 		} //end switch
 
 	} //while action
